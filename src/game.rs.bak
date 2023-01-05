@@ -1,0 +1,78 @@
+/// A color occupies a field on the board.
+/// Either X or O.
+#[repr(u8)]
+#[derive(Clone, Copy, Debug)]
+pub enum Color {
+    X = 0,
+    O = 1,
+}
+
+/// A standard 3x3 Tic Tac Toe Board
+#[derive(Clone, Copy, Debug)]
+pub struct Board {
+    /// Bits are used as follows:
+    /// 31..22:   Xs; 1 means occupied, 0 means empty
+    /// 22..13:  Os: 1 means occupied, 0 means empty
+    state: u32,
+    turn: Color,
+}
+
+impl Board {
+    pub fn init() -> Self {
+        Self {
+            state: 0,
+            turn: Color::X,
+        }
+    }
+
+    pub fn new(state: u32, turn: Color) -> Self {
+        Self { state, turn }
+    }
+
+    pub fn generate_moves(&self) -> Vec<Self> {
+        let mut results = Vec::with_capacity(9);
+        let color_offset = match self.turn {
+            Color::X => 0,
+            Color::O => 9,
+        };
+        for i in color_offset..color_offset + 9 {
+            let index_mask = 1 << i;
+            if self.state & index_mask != index_mask && /*aaaaaaaaaaaaagh*/ {
+                results.push(Self::new(self.state | index_mask, !self.turn));
+            }
+        }
+        results
+    }
+}
+
+impl std::ops::Not for Color {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Self::X => Self::O,
+            Self::O => Self::X,
+        }
+    }
+}
+
+impl std::fmt::Display for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        for i in 0..9 {
+            if i % 3 == 0 {
+                write!(f, "\n")?;
+            }
+            let x_mask = 1 << i;
+            let o_mask = x_mask << 9;
+            if self.state & x_mask == x_mask {
+                write!(f, "X")?;
+            } else if self.state & o_mask == o_mask {
+                println!("yes");
+                write!(f, "O")?;
+            } else {
+                write!(f, "-")?;
+            }
+        }
+        write!(f, "")
+    }
+}
